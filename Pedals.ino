@@ -5,6 +5,8 @@
 
 // Global variables
 long t = 0;
+int minPos = 1023;
+int maxPos = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -13,23 +15,35 @@ void setup() {
   pinMode(analog_input_pin, INPUT_PULLUP);
 
   t = millis();
-  Serial.print(analogRead(analog_input_pin));
 }
 
+void debugPrint(int zAxisPos) {
+      Serial.print(zAxisPos);
+      Serial.print(", ");
+      Serial.print(analogRead(analog_input_pin));
+      Serial.print(", (");
+      Serial.print(minPos);
+      Serial.print("/");
+      Serial.print(maxPos);
+      Serial.print(") - mid: ");
+      Serial.println((maxPos - minPos)/2 + minPos);
+}
 
 void loop() {
     int zAxisPos = 0;
-    
+    int sensorValue = 0;
+
+    sensorValue = analogRead(analog_input_pin);
+    maxPos = max(maxPos, sensorValue);
+    minPos = min(minPos, sensorValue);
+    zAxisPos = map(sensorValue, minPos, maxPos, 0, 1023);
+
     if ((millis() - t) > 10) {
       t = millis();
 
-      zAxisPos = map(analogRead(analog_input_pin), 180, 785, 0, 1023);
+      debugPrint(zAxisPos);
+      
       Joystick.Z(zAxisPos);
-
-      Serial.print(zAxisPos);
-      Serial.print(", ");
-      Serial.println(analogRead(analog_input_pin));
-
       Joystick.send_now();
     }
     
